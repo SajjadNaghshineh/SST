@@ -101,7 +101,7 @@ def place_order(symbol, order_type, tp, sl, volume):
             "sl": sl,
             "tp": tp,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_FOK,
+            "type_filling": mt5.ORDER_FILLING_IOC,
         }
     elif order_type == "buy":
         request = {
@@ -113,7 +113,7 @@ def place_order(symbol, order_type, tp, sl, volume):
             "sl": sl,
             "tp": tp,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_FOK,
+            "type_filling": mt5.ORDER_FILLING_IOC,
         }
         
     result = mt5.order_send(request)
