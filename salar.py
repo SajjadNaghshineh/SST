@@ -9,7 +9,7 @@ import datetime as dt
 from utils import set_period
 import info
 
-symbol = "EURUSD"
+symbol = "USDJPY"
 timeframe = "M3"
 bars = 30000
 # bars = 42000
@@ -71,7 +71,7 @@ def stop_loss_condition(df, symbol):
         else:
             allowed = True
     elif "JPY" in symbol:
-        if last_atr < 0.002:
+        if last_atr < 0.02:
             allowed = False
         else:
             allowed = True
@@ -99,9 +99,9 @@ def volume_calculation(df, symbol, balance, risk):
     one_percent = int(balance / 100) * risk
     
     last_atr = df.iloc[-1]['atr']
-    if 'JPY' in symbol:
-        last_atr = last_atr * 1000
-    elif symbol == "XAUUSD":
+    if symbol == "XAUUSD":
+        last_atr = last_atr * 10
+    elif "JPY" in symbol:
         last_atr = last_atr * 100
     else:
         last_atr = last_atr * 10000
