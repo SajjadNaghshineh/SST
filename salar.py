@@ -196,7 +196,7 @@ while True:
                         else:
                             trade_time = dt.datetime.now().replace(microsecond=0)
                             print(f"Sell for {symbol} at {trade_time}, sl:{sl}, calc entry: {df.iloc[-1]['close']}, real entry: {price}, tp: {tp}")
-        time.sleep(60)
+        time.sleep(180)
     except Exception as e:
         now = dt.datetime.now().replace(microsecond=0)
         print(f"Error: {e} at {now}")
