@@ -9,7 +9,7 @@ import datetime as dt
 from utils import set_period
 import info
 
-symbol = "USDJPY"
+symbol = "GBPCAD"
 timeframe = "M3"
 bars = 30000
 # bars = 42000
@@ -50,7 +50,7 @@ def add_indicators(df):
     df['vwap'] = ta.vwap(df['high'], df['low'], df['close'], df['volume'])
     df['atr'] = ta.atr(df['high'], df['low'], df['close'])
     adx = ta.adx(df['high'], df['low'], df['close'])
-    df = pd.concat([df, adx['ADX_14'], adx['DMP_14'], adx['DMN_14']], axis=1)
+    df = pd.concat([df, adx], axis=1)
     
     df.reset_index(inplace=True)
     
@@ -66,21 +66,17 @@ def stop_loss_condition(df, symbol):
     last_atr = df.iloc[-1]['atr']
     
     if symbol == "XAUUSD":
-        if last_atr < 0.2:
-            allowed = False
-        else:
-            allowed = True
+        allowed_atr = 0.2
     elif "JPY" in symbol:
-        if last_atr < 0.02:
-            allowed = False
-        else:
-            allowed = True
+        allowed_atr = 0.02
     else:
-        if last_atr < 0.0002:
-            allowed = False
-        else:
-            allowed = True
-            
+        allowed_atr = 0.0002
+        
+    if last_atr < allowed_atr:
+        allowed = False
+    else:
+        allowed = True
+        
     return allowed
 
 def tp_sl_calculation(df, order_type, rr):
@@ -124,7 +120,7 @@ def place_order(symbol, order_type, tp, sl, volume):
             "sl": sl,
             "tp": tp,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
     elif order_type == "buy":
         request = {
@@ -136,7 +132,7 @@ def place_order(symbol, order_type, tp, sl, volume):
             "sl": sl,
             "tp": tp,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
         
     result = mt5.order_send(request)
@@ -153,9 +149,11 @@ while True:
     try:
         today = dt.datetime.today()
         current_time = dt.datetime.now().time()
+        
         if today.weekday() not in [5, 6]:
             if current_time >= dt.time(0, 0) and current_time >= dt.time(4, 30):
                 connection = run_server(info.USERNAME, info.PASSWORD, info.SERVER, info.PATH)
+                
                 if not connection[0] or not connection[1]:
                     print(dt.datetime.now().replace(microsecond=0))
                     raise ValueError("Couldn't connect to server")
@@ -180,6 +178,7 @@ while True:
                         else:
                             trade_time = dt.datetime.now().replace(microsecond=0)
                             print(f"Buy for {symbol} at {trade_time}, sl:{sl}, calc entry: {df.iloc[-1]['close']}, real entry: {price}, tp: {tp}")
+                            
                 elif df.iloc[-1]['sell'] == 1:
                     allowed = stop_loss_condition(df, symbol)
                     if allowed:
@@ -196,7 +195,8 @@ while True:
                         else:
                             trade_time = dt.datetime.now().replace(microsecond=0)
                             print(f"Sell for {symbol} at {trade_time}, sl:{sl}, calc entry: {df.iloc[-1]['close']}, real entry: {price}, tp: {tp}")
-        time.sleep(180)
+        time.sleep(3 * 60)
+        
     except Exception as e:
         now = dt.datetime.now().replace(microsecond=0)
         print(f"Error: {e} at {now}")
